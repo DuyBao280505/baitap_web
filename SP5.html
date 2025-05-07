@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chi Tiết Sản Phẩm</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<div id="navbar-container"></div>
+<div class="container mt-5">
+    <div class="row">
+        <!-- Hình ảnh sản phẩm -->
+        <div class="col-md-6">
+            <img id="product-image" src="Anh5.1.png" class="img-fluid" alt="Sản phẩm">
+        </div>
+
+        <!-- Thông tin sản phẩm -->
+        <div class="col-md-6">
+            <h2 id="product-title">Dép Sandal Nữ</h2>
+            <p id="product-sku">SKU: AG108LDJ51-BLI29</p>
+            <h3 id="product-price">450.000đ</h3>
+
+            <!-- Chọn kích thước -->
+            <p><strong>Kích thước:</strong></p>
+            <div class="size-options">
+                <button class="size-option">38</button>
+                <button class="size-option">39</button>
+                <button class="size-option">40</button>
+                <button class="size-option">41</button>
+                <button class="size-option">42</button>
+            </div>
+
+            <!-- Chọn số lượng -->
+            <div class="quantity-container">
+                <button id="decrease" class="quantity-btn">-</button>
+                <span id="quantity">1</span>
+                <button id="increase" class="quantity-btn">+</button>
+            </div>
+
+            <!-- Nút thêm vào giỏ và mua ngay -->
+            <div class="btn-container">
+                <button id="addToCart" class="btn btn-dark">THÊM VÀO GIỎ</button>
+                <button id="buyNow" class="btn btn-outline-dark">MUA NGAY</button>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="product-detail">
+    <ul id="product-description">
+        <h4>Mô tả sản phẩm</h4>
+        <li>Được sản xuất theo công nghệ Nhật Bản.</li>
+        <li>Sandal với form quai ngang lót dán, khuy bấm tiện dụng, dễ dàng tùy chỉnh theo size chân, cực ngầu và tiện lợi.</li>
+        <li>Tăng khả năng ma sát, giảm hao mòn, chống lún, êm và siêu nhẹ.</li>
+        <li>Sản phẩm dành riêng cho giới Streetwear, phù hợp với những bạn cá tính yêu thích sự tối giản.</li>
+        <li>Kiểu dáng thời trang, năng động, thích hợp cho nhiều loại trang phục.</li>
+    </ul>
+    </div>
+<div id="footer-container"></div>
+<script src="script.js"></script>
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+    let quantity = 1;
+
+    // Xử lý chọn kích thước
+    document.querySelectorAll(".size-option").forEach(button => {
+        button.addEventListener("click", function () {
+            document.querySelectorAll(".size-option").forEach(btn => btn.classList.remove("selected"));
+            this.classList.add("selected");
+        });
+    });
+
+    // Tăng giảm số lượng
+    document.getElementById("increase").addEventListener("click", function () {
+        quantity++;
+        document.getElementById("quantity").textContent = quantity;
+    });
+
+    document.getElementById("decrease").addEventListener("click", function () {
+        if (quantity > 1) {
+            quantity--;
+            document.getElementById("quantity").textContent = quantity;
+        }
+    });
+
+    // Thêm vào giỏ hàng
+    document.getElementById("addToCart").addEventListener("click", function () {
+        let selectedSize = document.querySelector(".size-option.selected")?.textContent || "N/A";
+        let product = {
+            name: document.getElementById("product-title").textContent,
+            price: document.getElementById("product-price").textContent.replace("đ", "").trim(),
+            sku: document.getElementById("product-sku").textContent,
+            image: document.getElementById("product-image").src,
+            size: selectedSize,
+            quantity: quantity
+        };
+
+        let cart = JSON.parse(localStorage.getItem("cart")) || [];
+        cart.push(product);
+        localStorage.setItem("cart", JSON.stringify(cart));
+        alert("Sản phẩm đã được thêm vào giỏ hàng!");
+    });
+
+    document.getElementById("buyNow").addEventListener("click", function () {
+    let selectedSize = document.querySelector(".size-option.selected")?.textContent || "N/A";
+
+    if (selectedSize === "N/A") {
+        alert("Vui lòng chọn kích thước trước khi mua hàng!");
+        return;
+    }
+
+    // Lấy thông tin sản phẩm
+    let product = {
+        name: document.getElementById("product-title").textContent,
+        price: parseInt(
+            document.getElementById("product-price").textContent
+                .replace("đ", "")
+                .replace(/\./g, "") // Xóa dấu chấm phân cách nghìn
+                .trim()
+        ),
+        sku: document.getElementById("product-sku").textContent,
+        image: document.getElementById("product-image").src,
+        size: selectedSize,
+        quantity: quantity // ✅ lấy từ biến toàn cục
+    };
+
+    // Lưu vào localStorage
+    localStorage.setItem("checkoutItems", JSON.stringify([product]));
+
+    // Chuyển hướng
+    window.location.href = "checkout.html";
+});
+});
+function goToLastInvoice() {
+    const orders = JSON.parse(localStorage.getItem('orders')) || [];
+
+    if (orders.length === 0) {
+        alert('Bạn chưa có đơn hàng nào!');
+        return;
+    }
+
+    const lastOrder = orders[orders.length - 1];
+    // Điều hướng sang trang invoice.html với ID đơn hàng
+    window.location.href = 'invoice.html?id=' + lastOrder.id;
+}
+</script>
+</body>
+</html>

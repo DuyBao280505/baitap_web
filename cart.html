@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Giỏ Hàng</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+    <script defer src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script defer src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/js/all.min.js"></script>
+</head>
+<body>
+    <div id="navbar-container"></div>
+    <!-- Giỏ Hàng -->
+    <div class="container mt-4">
+        <h2 class="text-center">🛒 Giỏ Hàng Của Bạn</h2>
+        <div id="empty-cart-message" class="alert alert-info text-center" style="display: none;">
+            Giỏ hàng của bạn đang trống
+        </div>
+        <table class="table table-bordered table-hover text-center">
+            <thead class="table-dark">
+                <tr>
+                    <th>Ảnh</th>
+                    <th>Sản phẩm</th>
+                    <th>Giá</th>
+                    <th>Số lượng</th>
+                    <th>Hành động</th>
+                </tr>
+            </thead>
+            <tbody id="cart-items">
+                <!-- Sản phẩm sẽ hiển thị ở đây -->
+            </tbody>
+        </table>
+
+        <h4 class="text-end">Tổng tiền: <span id="total-price" class="text-danger">0đ</span></h4>
+
+        <div class="text-end">
+            <button class="btn btn-danger" onclick="clearCart()">Xóa toàn bộ giỏ hàng</button>
+            <button id="proceed-to-checkout" class="btn btn-primary">Tiến hành thanh toán</button>
+        </div>
+    </div>
+    <script src="script.js"></script>
+    <script>
+        const CART_KEY = 'cart';
+        const CHECKOUT_ITEMS_KEY = 'checkoutItems';
+
+        function getCart() {
+            return JSON.parse(localStorage.getItem(CART_KEY)) || [];
+        }
+
+        function saveCart(cart) {
+            localStorage.setItem(CART_KEY, JSON.stringify(cart));
+        }
+
+        function updateCartUI() {
+            const cart = getCart();
+            const cartItemsContainer = document.getElementById("cart-items");
+            const totalPriceElement = document.getElementById("total-price");
+            const emptyCartMessage = document.getElementById("empty-cart-message");
+
+            if (cart.length === 0) {
+                cartItemsContainer.innerHTML = "";
+                emptyCartMessage.style.display = "block";
+                totalPriceElement.textContent = "0đ";
+                return;
+            }
+
+            emptyCartMessage.style.display = "none";
+            cartItemsContainer.innerHTML = "";
+            let total = 0;
+
+            cart.forEach((item, index) => {
+                const price = convertPriceToNumber(item.price);
+                const itemTotal = price * item.quantity;
+                total += itemTotal;
+
+                cartItemsContainer.innerHTML += `
+                    <tr>
+                        <td><img src="${item.image}" width="50"></td>
+                        <td>
+                            ${item.name}
+                            ${item.size ? `<br><small>Size: ${item.size}</small>` : ''}
+                        </td>
+                        <td>
+                            ${price.toLocaleString("vi-VN")}đ x ${item.quantity} 
+                            = <strong>${itemTotal.toLocaleString("vi-VN")}đ</strong>
+                        </td>
+                        <td>
+                            <button class="btn btn-sm btn-outline-dark" onclick="updateQuantity(${index}, -1)">-</button>
+                            <span class="mx-2">${item.quantity}</span>
+                            <button class="btn btn-sm btn-outline-dark" onclick="updateQuantity(${index}, 1)">+</button>
+                        </td>
+                        <td>
+                            <button class="btn btn-sm btn-danger" onclick="removeFromCart(${index})">
+                                ❌ Xóa
+                            </button>
+                        </td>
+                    </tr>
+                `;
+            });
+
+            totalPriceElement.textContent = total.toLocaleString("vi-VN") + "đ";
+            updateCartCount();
+        }
+
+        function removeFromCart(index) {
+            let cart = getCart();
+            cart.splice(index, 1);
+            saveCart(cart);
+            updateCartUI();
+        }
+
+        function clearCart() {
+            if (confirm('Bạn có chắc chắn muốn xóa toàn bộ giỏ hàng?')) {
+                localStorage.removeItem(CART_KEY);
+                updateCartUI();
+            }
+        }
+
+        function updateQuantity(index, change) {
+            let cart = getCart();
+            cart[index].quantity = Math.max(1, cart[index].quantity + change);
+            saveCart(cart);
+            updateCartUI();
+        }
+
+        function convertPriceToNumber(price) {
+            if (typeof price === 'number') return price;
+            return parseInt(price.toString().replace(/\./g, '').replace('đ', '').trim()) || 0;
+        }
+
+        function updateCartCount() {
+            const cart = getCart();
+            const count = cart.reduce((total, item) => total + item.quantity, 0);
+            document.querySelectorAll('.cart-count').forEach(el => {
+                el.textContent = count > 0 ? count : '';
+            });
+        }
+
+        function prepareCheckout() {
+            const cart = getCart();
+            if (cart.length === 0) {
+                alert('Giỏ hàng của bạn đang trống!');
+                return;
+            }
+            localStorage.setItem(CHECKOUT_ITEMS_KEY, JSON.stringify(cart));
+            window.location.href = "checkout.html";
+        }
+
+        document.addEventListener("DOMContentLoaded", function () {
+            updateCartUI();
+            updateCartCount();
+        });
+        document.getElementById('proceed-to-checkout').addEventListener('click', () => {
+            if (prepareCheckout()) {
+        window.location.href = 'checkout.html';
+            }
+        });
+    </script>
+</body>
+</html>
